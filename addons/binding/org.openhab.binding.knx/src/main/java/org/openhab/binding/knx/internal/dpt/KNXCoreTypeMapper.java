@@ -523,6 +523,39 @@ public class KNXCoreTypeMapper implements KNXTypeMapper {
         /** Exceptions Datapoint Types "RGB Color", Main number 232 */
         // Example: dptTypeMap.put(DPTXlatorRGB.DPT_RGB.getID(), HSBType.class);
 
+        /**
+         * MainType: 249, 6 bytes
+         * 249.600: DPT_Brightness_Colour_Temperature_Transition
+         */
+        dptMainTypeMap.put(249, HSBType.class);
+
+        /**
+         * MainType: 250, 3 bytes
+         * 250.600: DPT_Brightness_Colour_Temperature_Control
+         */
+        dptMainTypeMap.put(250, HSBType.class);
+
+        /**
+         * MainType: 251, 6 bytes
+         * 251.600: DPT_Colour_RGBW, r g b w
+         */
+        dptMainTypeMap.put(251, HSBType.class);
+        /*
+         * //https://knx-user-forum.de/forum/supportforen/wiregate/
+         * 1085778-neue-knx-datentypen-f%C3%BCr-farben-farbtemperatur
+         * RGB and other DTP definitions: https://www.mdt.de/download/MDT_THB_DaliControl_Gateway_03.pdf
+         * 7.600 DPT_Absolute_Colour_Temperature [K] (TW) ------>>> ETS does know, calimero doesn't know
+         * 232.600 DPT_Colour_RGB, values: 0 0 0...255 255 255, r g b
+         * 242.600 DPT_Colour_xyY
+         * 243.600 DPT_Colour_Transition_xyY
+         * 249.600 DPT_Brightness_Colour_Temperature_Transition >>> ETS does know, calimero doesn't know
+         * 250.600 DPT_Brightness_Colour_Temperature_Control --->>> ETS does know, calimero doesn't know
+         * 251.600 DPT_Colour_RGBW ----------------------------->>> ETS does know, calimero doesn't know
+         * 252.600 DPT_Relative_Control_RGBW
+         * 253.600 DPT_Relative_Control_xyY
+         * 254.600 DPT_Relative_Control_RGB
+         */
+
         defaultDptMap = new HashMap<Class<? extends Type>, String>();
         defaultDptMap.put(OnOffType.class, DPTXlatorBoolean.DPT_SWITCH.getID());
         defaultDptMap.put(UpDownType.class, DPTXlatorBoolean.DPT_UPDOWN.getID());
@@ -543,6 +576,11 @@ public class KNXCoreTypeMapper implements KNXTypeMapper {
         int mainNumber = getMainNumber(dptID);
         if (mainNumber == -1) {
             logger.error("toDPTValue couldn't identify mainnumber in dptID: {}", dptID);
+            return null;
+        }
+        int subNumber = getSubNumber(dptID);
+        if (subNumber == -1) {
+            logger.debug("toType: couldn't identify sub number in dptID: {}.", dptID);
             return null;
         }
 
@@ -751,6 +789,104 @@ public class KNXCoreTypeMapper implements KNXTypeMapper {
                         cal.setTimeInMillis(translatorDateTime.getValueMilliseconds());
                         value = new SimpleDateFormat(DateTimeType.DATE_PATTERN).format(cal.getTime());
                         return DateTimeType.valueOf(value);
+                    }
+                    break;
+                /*
+                 * //https://knx-user-forum.de/forum/supportforen/wiregate/
+                 * 1085778-neue-knx-datentypen-f%C3%BCr-farben-farbtemperatur
+                 * RGB and other DTP definitions: https://www.mdt.de/download/MDT_THB_DaliControl_Gateway_03.pdf
+                 * 7.600 DPT_Absolute_Colour_Temperature [K] (TW) ------>>> ETS does know, calimero doesn't know
+                 * 232.600 DPT_Colour_RGB, values: 0 0 0...255 255 255, r g b
+                 * 242.600 DPT_Colour_xyY
+                 * 243.600 DPT_Colour_Transition_xyY
+                 * 249.600 DPT_Brightness_Colour_Temperature_Transition >>> ETS does know, calimero doesn't know
+                 * 250.600 DPT_Brightness_Colour_Temperature_Control --->>> ETS does know, calimero doesn't know
+                 * 251.600 DPT_Colour_RGBW ----------------------------->>> ETS does know, calimero doesn't know
+                 * 252.600 DPT_Relative_Control_RGBW
+                 * 253.600 DPT_Relative_Control_xyY
+                 * 254.600 DPT_Relative_Control_RGB
+                 */
+                case 7: // 7.600 DPT_Absolute_Colour_Temperature [K] (TW)
+                    if (subNumber == 600) {
+                        logger.debug("toType: TODO, it can be programmed by ETS. DPT = {}", datapoint.getDPT());
+                        logger.debug("toType: TODO, it can be programmed by ETS. DPT = {}", value);
+                    } else {
+                        logger.debug("toType: Datapoint is not supported. DPT = {}", datapoint.getDPT());
+                        return null;
+                    }
+                    break;
+                case 232: // 232.600 DPT_Colour_RGB, values: 0 0 0...255 255 255, r g b
+                    if (subNumber == 600) {
+                        logger.debug("toType: TODO, it can be programmed by ETS. DPT = {}", datapoint.getDPT());
+                        logger.debug("toType: TODO, it can be programmed by ETS. DPT = {}", value);
+                    } else {
+                        logger.debug("toType: Datapoint is not supported. DPT = {}", datapoint.getDPT());
+                        return null;
+                    }
+                    break;
+                case 242: // 242.600 DPT_Colour_xyY
+                    if (subNumber == 600) {
+                        logger.warn("toType: Not implemented yet. DPT = {}", datapoint.getDPT());
+                    } else {
+                        logger.debug("toType: Datapoint is not supported. DPT = {}", datapoint.getDPT());
+                        return null;
+                    }
+                    break;
+                case 243: // 243.600 DPT_Colour_Transition_xyY
+                    if (subNumber == 600) {
+                        logger.warn("toType: Not implemented yet. DPT = {}", datapoint.getDPT());
+                    } else {
+                        logger.debug("toType: Datapoint is not supported. DPT = {}", datapoint.getDPT());
+                        return null;
+                    }
+                    break;
+                case 249: // 249.600 DPT_Brightness_Colour_Temperature_Transition
+                    if (subNumber == 600) {
+                        logger.debug("toType: TODO, it can be programmed by ETS. DPT = {}", datapoint.getDPT());
+                        logger.debug("toType: TODO, it can be programmed by ETS. DPT = {}", value);
+                    } else {
+                        logger.debug("toType: Datapoint is not supported. DPT = {}", datapoint.getDPT());
+                        return null;
+                    }
+                    break;
+                case 250: // 250.600 DPT_Brightness_Colour_Temperature_Control
+                    if (subNumber == 600) {
+                        logger.warn("toType: Not implemented yet. DPT = {}", datapoint.getDPT());
+                    } else {
+                        logger.debug("toType: Datapoint is not supported. DPT = {}", datapoint.getDPT());
+                        return null;
+                    }
+                    break;
+                case 251: // 251.600 DPT_Colour_RGBW, values: 0 0 0 0...255 255 255 255, r g b w
+                    if (subNumber == 600) {
+                        logger.debug("toType: TODO, it can be programmed by ETS. DPT = {}", datapoint.getDPT());
+                    } else {
+                        logger.debug("toType: Datapoint is not supported. DPT = {}", datapoint.getDPT());
+                        return null;
+                    }
+                    break;
+                case 252: // 252.600 DPT_Relative_Control_RGBW
+                    if (subNumber == 600) {
+                        logger.warn("toType: Not implemented yet. DPT = {}", datapoint.getDPT());
+                    } else {
+                        logger.debug("toType: Datapoint is not supported. DPT = {}", datapoint.getDPT());
+                        return null;
+                    }
+                    break;
+                case 253: // 253.600 DPT_Relative_Control_xyY
+                    if (subNumber == 600) {
+                        logger.warn("toType: Not implemented yet. DPT = {}", datapoint.getDPT());
+                    } else {
+                        logger.debug("toType: Datapoint is not supported. DPT = {}", datapoint.getDPT());
+                        return null;
+                    }
+                    break;
+                case 254: // 254.600 DPT_Relative_Control_RGB
+                    if (subNumber == 600) {
+                        logger.warn("toType: Not implemented yet. DPT = {}", datapoint.getDPT());
+                    } else {
+                        logger.debug("toType: Datapoint is not supported. DPT = {}", datapoint.getDPT());
+                        return null;
                     }
                     break;
             }
