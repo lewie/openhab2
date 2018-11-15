@@ -43,10 +43,10 @@ import tuwien.auto.calimero.KNXFormatException;
 public abstract class KNXChannelType {
 
     private static final Pattern PATTERN = Pattern.compile(
-            "^((?<dpt>[0-9]{1,3}\\.[0-9]{3,4}):)?(?<read>\\<)?(?<mainGA>[0-9]{1,5}(/[0-9]{1,4}){0,2})(?<listenGAs>(\\+(\\<?[0-9]{1,5}(/[0-9]{1,4}){0,2}))*)$");
+            "^((?<dpt>[0-9]{1,3}\\.[0-9]{3,4}):)?(?<read>\\<)?(?<write>\\>)?(?<mainGA>[0-9]{1,5}(/[0-9]{1,4}){0,2})(?<listenGAs>(\\+(\\<?[0-9]{1,5}(/[0-9]{1,4}){0,2}))*)(?<respondGAs>(\\+(\\>?[0-9]{1,5}(/[0-9]{1,4}){0,2}))*)$");
 
     private static final Pattern PATTERN_LISTEN = Pattern
-            .compile("\\+((?<read>\\<)?(?<GA>[0-9]{1,5}(/[0-9]{1,4}){0,2}))");
+            .compile("\\+((?<read>\\<)?(?<write>\\>)?(?<GA>[0-9]{1,5}(/[0-9]{1,4}){0,2}))");
 
     private final Logger logger = LoggerFactory.getLogger(KNXChannelType.class);
     private final Set<String> channelTypeIDs;
@@ -76,9 +76,17 @@ public abstract class KNXChannelType {
                 listenGAs.add(new GroupAddressConfiguration(m2.group("GA"), m2.group("read") != null));
             }
 
+            // Respond GAs
+            String output = matcher.group("respondGAs");
+            Matcher m3 = PATTERN_LISTEN.matcher(output);
+            List<GroupAddressConfiguration> respondGAs = new LinkedList<>();
+            while (m3.find()) {
+                respondGAs.add(new GroupAddressConfiguration(m3.group("GA"), false, m3.group("write") != null));
+            }
+
             // Main GA
             GroupAddressConfiguration mainGA = new GroupAddressConfiguration(matcher.group("mainGA"),
-                    matcher.group("read") != null);
+                    matcher.group("read") != null, matcher.group("write") != null);
 
             return new ChannelConfiguration(matcher.group("dpt"), mainGA, listenGAs);
         }
@@ -86,6 +94,17 @@ public abstract class KNXChannelType {
     }
 
     protected abstract Set<String> getAllGAKeys();
+
+    public final Set<GroupAddress> getRespondAddresses(Configuration channelConfiguration) {
+        Set<GroupAddress> ret = new HashSet<>();
+        for (String key : getAllGAKeys()) {
+            ChannelConfiguration conf = parse((String) channelConfiguration.get(key));
+            if (conf != null) {
+                ret.addAll(conf.getRespondGAs().stream().map(this::toGroupAddress).collect(toSet()));
+            }
+        }
+        return ret;
+    }
 
     public final Set<GroupAddress> getListenAddresses(Configuration channelConfiguration) {
         Set<GroupAddress> ret = new HashSet<>();

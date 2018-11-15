@@ -10,6 +10,7 @@ package org.openhab.binding.knx.internal.channel;
 
 import static java.util.stream.Collectors.toList;
 
+import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -28,12 +29,22 @@ public class ChannelConfiguration {
     private final @Nullable String dpt;
     private final GroupAddressConfiguration mainGA;
     private final List<GroupAddressConfiguration> listenGAs;
+    private final List<GroupAddressConfiguration> respondGAs;
 
     public ChannelConfiguration(@Nullable String dpt, GroupAddressConfiguration mainGA,
             List<GroupAddressConfiguration> listenGAs) {
         this.dpt = dpt;
         this.mainGA = mainGA;
         this.listenGAs = listenGAs;
+        this.respondGAs = new LinkedList<GroupAddressConfiguration>();
+    }
+
+    public ChannelConfiguration(@Nullable String dpt, GroupAddressConfiguration mainGA,
+            List<GroupAddressConfiguration> listenGAs, List<GroupAddressConfiguration> respondGAs) {
+        this.dpt = dpt;
+        this.mainGA = mainGA;
+        this.listenGAs = listenGAs;
+        this.respondGAs = respondGAs;
     }
 
     public @Nullable String getDPT() {
@@ -50,6 +61,10 @@ public class ChannelConfiguration {
 
     public List<GroupAddressConfiguration> getReadGAs() {
         return getListenGAs().stream().filter(ga -> ga.isRead()).collect(toList());
+    }
+
+    public List<GroupAddressConfiguration> getRespondGAs() {
+        return getListenGAs().stream().filter(ga -> ga.isWrite()).collect(toList());
     }
 
 }

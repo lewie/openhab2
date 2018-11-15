@@ -21,11 +21,20 @@ public class GroupAddressConfiguration {
 
     private final String ga;
     private final boolean read;
+    private final boolean write;
 
     public GroupAddressConfiguration(String ga, boolean read) {
         super();
         this.ga = ga;
         this.read = read;
+        this.write = false;
+    }
+
+    public GroupAddressConfiguration(String ga, boolean read, boolean write) {
+        super();
+        this.ga = ga;
+        this.read = read;
+        this.write = write;
     }
 
     /**
@@ -44,6 +53,20 @@ public class GroupAddressConfiguration {
      */
     public boolean isRead() {
         return read;
+    }
+
+    /**
+     * Denotes whether the group address is marked to be actively writes to KNX.
+     *
+     * @return {@code true} if read requests should be issued to this address
+     */
+    public boolean isWrite() {
+        return write;
+    }
+
+    @Override
+    public String toString() {
+        return ga + " read:" + read + " write:" + write;
     }
 
 }
