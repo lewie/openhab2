@@ -17,5 +17,14 @@ package org.openhab.io.hueemulation.internal.dto;
 public class AbstractHueState {
     public boolean reachable = true;
     public String mode = "homeautomation";
-    public String alert = "none";
+
+    public static enum AlertEnum {
+        none,
+        /** flashes light once */
+        select,
+        /** flashes repeatedly for 10 seconds. */
+        lselect
+    }
+
+    public String alert = AlertEnum.none.name();
 }
