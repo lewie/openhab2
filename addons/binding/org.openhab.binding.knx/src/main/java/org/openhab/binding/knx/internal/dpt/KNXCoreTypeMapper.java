@@ -494,7 +494,7 @@ public class KNXCoreTypeMapper implements KNXTypeMapper {
          * 20.1003: RF Filter Select, enumeration [0..3]
          * 20.1200: M-Bus Breaker/Valve State, enumeration [0..255]
          * 20.1202: Gas Measurement Condition, enumeration [0..3]
-
+         *
          */
         dptMainTypeMap.put(20, StringType.class);
         /** Exceptions Datapoint Types, Main number 20 */
@@ -661,14 +661,12 @@ public class KNXCoreTypeMapper implements KNXTypeMapper {
     }
 
     @Override
-    public Type toType(Datapoint datapoint, byte[] data) {
+    public Type toType(Datapoint datapoint, byte[] data, String channelType) {
         try {
             DPTXlator translator = TranslatorTypes.createTranslator(datapoint.getMainNumber(), datapoint.getDPT());
             translator.setData(data);
             String value = translator.getValue();
-
             String id = translator.getType().getID();
-            logger.trace("toType datapoint DPT = {}", datapoint.getDPT());
 
             int mainNumber = getMainNumber(id);
             if (mainNumber == -1) {
@@ -680,6 +678,10 @@ public class KNXCoreTypeMapper implements KNXTypeMapper {
                 logger.debug("toType: couldn't identify sub number in dptID: {}.", id);
                 return null;
             }
+
+            logger.trace(
+                    "toType DPT = '{}' channelType = '{}' id = '{}' Translator-mainnumber'{}' mainNumber = '{}' subNumber = '{}'",
+                    datapoint.getDPT(), channelType, id, datapoint.getMainNumber(), mainNumber, subNumber);
             /*
              * Following code section deals with specific mapping of values from KNX to openHAB types were the String
              * received from the DPTXlator is not sufficient to set the openHAB type or has bugs
@@ -719,6 +721,17 @@ public class KNXCoreTypeMapper implements KNXTypeMapper {
                         case 8:
                             return translator3BitControlled.getControlBit() ? UpDownType.DOWN : UpDownType.UP;
                     }
+                    break;
+                case 5:
+                    switch (subNumber) {
+                        case 1:
+                            // In order to be able to interpret the value correctly, a distinction must be made between
+                            // whether a channel type "number" or "dimmer" is supplied. Direction KNX -> openHAB
+                            return "number".equals(channelType)
+                                    ? new DecimalType(BigDecimal.valueOf(Math.round(translator.getNumericValue())))
+                                    : new PercentType(BigDecimal.valueOf(Math.round(translator.getNumericValue())));
+                    }
+                    break;
                 case 14:
                     /*
                      * FIXME: Workaround for a bug in Calimero / Openhab DPTXlator4ByteFloat.makeString(): is using a
@@ -859,14 +872,26 @@ public class KNXCoreTypeMapper implements KNXTypeMapper {
     public Class<? extends Type> toTypeClass(String dptId) {
         Class<? extends Type> ohClass = dptTypeMap.get(dptId);
         if (ohClass == null) {
-            int mainNumber = getMainNumber(dptId);
-            if (mainNumber == -1) {
-                logger.debug("Couldn't convert KNX datapoint type id into openHAB type class for dptId: {}.", dptId);
-                return null;
-            }
-            ohClass = dptMainTypeMap.get(mainNumber);
+            ohClass = toMainTypeClass(dptId);
         }
         return ohClass;
+    }
+
+    /**
+     * Converts a datapoint type id into an openHAB main/default type class
+     *
+     * @param dptId the datapoint type id
+     * @return the openHAB default type (command or state) class or {@code null} if the datapoint type id is not
+     *         supported.
+     */
+    @Override
+    public Class<? extends Type> toMainTypeClass(String dptId) {
+        int mainNumber = getMainNumber(dptId);
+        if (mainNumber == -1) {
+            logger.debug("Couldn't convert KNX datapoint type id into openHAB type class for dptId: {}.", dptId);
+            return null;
+        }
+        return dptMainTypeMap.get(mainNumber);
     }
 
     /**

@@ -42,12 +42,16 @@ public interface KNXTypeMapper {
      *
      * @param datapoint the source datapoint
      * @param data the datapoint value as an ASDU byte array (see <code>{@link ProcessEvent}.getASDU()</code>)
+     * @param string
      * @return a command or state of openHAB
      */
     @Nullable
-    public Type toType(Datapoint datapoint, byte[] data);
+    public Type toType(Datapoint datapoint, byte[] data, String string);
 
     @Nullable
     public Class<? extends Type> toTypeClass(@Nullable String dpt);
+
+    @Nullable
+    public Class<? extends Type> toMainTypeClass(@Nullable String dpt);
 
 }

@@ -335,7 +335,7 @@ public class DeviceThingHandler extends AbstractKNXThingHandler {
                         logger.trace("onGroupWrite isControl");
                         Type type = typeHelper.toType(
                                 new CommandDP(destination, getThing().getUID().toString(), 0, listenSpec.getDPT()),
-                                asdu);
+                                asdu, getChannelTypeUID(channel.getUID()).getId());
                         if (type != null) {
                             OutboundSpec commandSpec = selector.getCommandSpec(configuration, typeHelper, type);
                             if (commandSpec != null) {
@@ -370,7 +370,7 @@ public class DeviceThingHandler extends AbstractKNXThingHandler {
         }
 
         Datapoint datapoint = new CommandDP(destination, getThing().getUID().toString(), 0, listenSpec.getDPT());
-        Type type = typeHelper.toType(datapoint, asdu);
+        Type type = typeHelper.toType(datapoint, asdu, getChannelTypeUID(channelUID).getId());
 
         if (type != null) {
             if (isControl(channelUID)) {

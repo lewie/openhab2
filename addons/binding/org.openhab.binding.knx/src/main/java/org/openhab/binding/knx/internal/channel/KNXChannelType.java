@@ -165,14 +165,16 @@ public abstract class KNXChannelType {
                 if (dpt == null) {
                     dpt = getDefaultDPT(key);
                 }
+                // Let it pass when the value fits to specific OR default class given from typeHelper. For example
+                // outgoing number value for PercentType OR DecimalType (1 or 1,0)
                 Class<? extends Type> expectedTypeClass = typeHelper.toTypeClass(dpt);
-                if (expectedTypeClass != null) {
-                    if (expectedTypeClass.isInstance(command)) {
-                        logger.trace(
-                                "getCommandSpec key '{}' uses expectedTypeClass '{}' witch isInstance for command '{}' and dpt '{}'",
-                                key, expectedTypeClass, command, dpt);
-                        return new WriteSpecImpl(config, dpt, command);
-                    }
+                Class<? extends Type> expectedMainTypeClass = typeHelper.toMainTypeClass(dpt);
+                if ((expectedTypeClass != null && expectedTypeClass.isInstance(command))
+                        || (expectedMainTypeClass != null && expectedMainTypeClass.isInstance(command))) {
+                    logger.trace(
+                            "getCommandSpec key '{}' uses expectedTypeClass '{}' witch isInstance for command '{}' and dpt '{}'",
+                            key, expectedTypeClass, command, dpt);
+                    return new WriteSpecImpl(config, dpt, command);
                 }
             }
         }
